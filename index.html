@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Memória Virtual</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1 style="text-align: center;">Sistemas Operacionais II</h1>
+        <h1>Memória Virtual com Paginação por Demanda</h1>
+
+        <div class="config">
+            <div class="input-group">
+                <label for="page-sequence">Sequência de Acesso às Páginas (separada por vírgula ou espaço):</label>
+                <textarea id="page-sequence" rows="3"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="num-frames">Número de Frames na Memória:</label>
+                <input type="number" id="num-frames" value="3" min="1">
+            </div>
+
+            <div class="input-group">
+                <label for="algorithm">Algoritmo de Substituição:</label>
+                <select id="algorithm">
+                    <option value="fifo">FIFO</option>
+                    <option value="optimal">Optimal</option>
+                    <option value="clock">Clock (Second-Chance)</option>
+                </select>
+            </div>
+            
+            <button id="start-simulation">Iniciar Simulação</button>
+        </div>
+
+        <div class="output">
+            <h2>Resultados</h2>
+            <div id="results-summary"></div>
+            <h3>Estado da Memória (Passo a Passo):</h3>
+            <div id="memory-view"></div>
+            <h3>Log de Eventos:</h3>
+            <pre id="simulation-log">Em Construção</pre>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
