@@ -4,46 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Memória Virtual</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
     <div class="container">
-        <h1 style="text-align: center;">Sistemas Operacionais II</h1>
-        <h1>Memória Virtual com Paginação por Demanda</h1>
+        <h1>🖥️ Simulador de Memória Virtual</h1>
 
-        <div class="config">
-            <div class="input-group">
-                <label for="SequenciadePaginas">Sequência de Acesso às Páginas (separada por vírgula ou espaço):</label>
-                <textarea id="SequenciadePaginas" rows="3"></textarea>
+        <section class="config-section">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="pageSequence">Sequência de Páginas:</label>
+                    <textarea id="pageSequence" rows="3" placeholder="Ex: 1,2,3,4,1,2,5,1,2,3,4,5"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="numFrames">Número de Frames:</label>
+                    <input type="number" id="numFrames" value="3" min="1" max="10">
+                </div>
+                
+                <div class="form-group">
+                    <label for="algorithm">Algoritmo:</label>
+                    <select id="algorithm">
+                        <option value="fifo">FIFO</option>
+                        <option value="optimal">Optimal</option>
+                        <option value="clock">Clock</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="allocation">Alocação:</label>
+                    <select id="allocation">
+                        <option value="global">Global</option>
+                        <option value="local">Local</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label for="num-frames">Número de Frames na Memória:</label>
-                <input type="number" id="num-frames" value="3" min="1">
+            <div class="button-group">
+                <button id="startBtn" class="btn">🚀 Iniciar</button>
+                <button id="pauseBtn" class="btn btn-secondary" disabled>⏸️ Pausar</button>
+                <button id="stepBtn" class="btn btn-secondary" disabled>⏭️ Passo</button>
+                <button id="resetBtn" class="btn btn-secondary">🔄 Reset</button>
             </div>
 
-            <div class="input-group">
-                <label for="algorithm">Algoritmo de Substituição:</label>
-                <select id="algorithm">
-                    <option value="fifo">FIFO</option>
-                    <option value="optimal">Optimal</option>
-                    <option value="clock">Clock (Second-Chance)</option>
-                </select>
+            <div class="speed-control">
+                <label>Velocidade:</label>
+                <input type="range" id="speedSlider" class="speed-slider" min="100" max="2000" value="800">
+                <span id="speedValue">800ms</span>
             </div>
-            
-            <button id="start-simulation">Iniciar Simulação</button>
+        </section>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalAccesses">0</div>
+                <div class="stat-label">Total de Acessos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pageFaults">0</div>
+                <div class="stat-label">Page Faults</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pageHits">0</div>
+                <div class="stat-label">Page Hits</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="faultRate">0%</div>
+                <div class="stat-label">Taxa de Falhas</div>
+            </div>
+        </section>
+
+        <div class="main-content">
+            <section class="section">
+                <h3>💾 Estado da Memória</h3>
+                <div>Página atual: <span class="current-page" id="currentPageDisplay">-</span></div>
+                <div class="memory-view" id="memoryView"></div>
+                <div id="memoryInfo"></div>
+            </section>
+
+            <section class="section">
+                <h3>📋 Log da Simulação</h3>
+                <div class="simulation-log" id="simulationLog">Pronto para iniciar simulação...</div>
+            </section>
         </div>
 
-        <div class="output">
-            <h2>Resultados</h2>
-            <div id="results-summary"></div>
-            <h3>Estado da Memória (Passo a Passo):</h3>
-            <div id="memory-view"></div>
-            <h3>Log de Eventos:</h3>
-            <pre id="simulation-log">Em Construção</pre>
-        </div>
+        <section class="page-table-section">
+            <h3>📑 Tabela de Páginas</h3>
+            <div class="page-table" id="pageTable">
+                <div class="page-table-header">Página</div>
+                <div class="page-table-header">Presente</div>
+                <div class="page-table-header">Frame</div>
+            </div>
+        </section>
     </div>
 
     <script src="script.js"></script>
 </body>
+</html>
