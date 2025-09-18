@@ -3,7 +3,7 @@
 const simulator = {
     frames: [],
     pageSequence: [],
-    processSequence: [], // Novo: sequência de processos
+    processSequence: [], 
     currentStep: 0,
     algorithm: 'fifo',
     mode: 'global',
@@ -12,16 +12,15 @@ const simulator = {
         faults: 0,
         hits: 0
     },
-    // Estatísticas por processo
     processStats: {},
     isPlaying: false,
     playInterval: null,
-    // Para FIFO
+    
     fifoQueue: [],
-    fifoQueueByProcess: {}, // FIFO por processo para modo local
+    fifoQueueByProcess: {}, 
     
     clockPointer: 0,
-    clockPointerByProcess: {}, // Clock pointer por processo
+    clockPointerByProcess: {}, 
     referenceBits: [],
     
     lruCounter: 0,
@@ -381,6 +380,7 @@ function resetSimulation() {
     clearLog();
     
     document.getElementById('currentStep').innerHTML = '<p class="text-gray-400">Aguardando início da simulação...</p>';
+    document.getElementById('clockInfo').classList.add('hidden');
 }
 
 function finishSimulation() {
