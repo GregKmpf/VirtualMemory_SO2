@@ -8,6 +8,22 @@ function algorithmFIFO() {
     return victim;
 }
 
+// FIFO para modo Local
+function algorithmFIFOLocal(processId) {
+    if (!simulator.fifoQueueByProcess[processId]) {
+        simulator.fifoQueueByProcess[processId] = [];
+        // Inicializar fila com frames do processo
+        const processFrames = simulator.processAllocation[processId];
+        simulator.fifoQueueByProcess[processId] = [...processFrames];
+    }
+    
+    const queue = simulator.fifoQueueByProcess[processId];
+    const victim = queue.shift();
+    queue.push(victim);
+    
+    return victim;
+}
+
 // Algoritmo Optimal (Teórico - usa conhecimento futuro)
 function algorithmOptimal() {
     let victim = 0;
@@ -29,6 +45,35 @@ function algorithmOptimal() {
         if (nextUse > maxDistance) {
             maxDistance = nextUse;
             victim = i;
+        }
+    }
+    
+    return victim;
+}
+
+// Optimal para modo Local
+function algorithmOptimalLocal(processId, candidateFrames) {
+    let victim = candidateFrames[0];
+    let maxDistance = -1;
+    
+    for (const frameIndex of candidateFrames) {
+        if (simulator.frames[frameIndex].pageId === null) continue;
+        
+        const pageId = simulator.frames[frameIndex].pageId;
+        let nextUse = Infinity;
+        
+        // Encontrar próximo uso desta página pelo mesmo processo
+        for (let j = simulator.currentStep + 1; j < simulator.pageSequence.length; j++) {
+            if (simulator.pageSequence[j] === pageId && 
+                simulator.processSequence[j] === processId) {
+                nextUse = j - simulator.currentStep;
+                break;
+            }
+        }
+        
+        if (nextUse > maxDistance) {
+            maxDistance = nextUse;
+            victim = frameIndex;
         }
     }
     
