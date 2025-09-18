@@ -3,100 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Memória Virtual</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Simulador de Memória Virtual - Paginação por Demanda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pageIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes pageFault {
+            0% { background-color: rgb(239 68 68); }
+            100% { background-color: rgb(254 202 202); }
+        }
+        
+        .page-in { animation: pageIn 0.3s ease-out; }
+        .fault-animation { animation: pageFault 0.5s ease-out; }
+        
+        .frame-slot {
+            transition: all 0.3s ease;
+        }
+        
+        .frame-slot:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>🖥️ Simulador de Memória Virtual</h1>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="mb-8 border-b border-gray-200 pb-6">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">
+                Simulador de Memória Virtual
+            </h1>
+            <p class="text-gray-600">Paginação por Demanda com Algoritmos de Substituição</p>
+        </header>
 
-        <section class="config-section">
-            <div class="form-grid">
-                <div class="form-group full-width">
-                    <label for="pageSequence">Sequência de Páginas:</label>
-                    <textarea id="pageSequence" rows="3" placeholder="Ex: 1,2,3,4,1,2,5,1,2,3,4,5"></textarea>
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <span class="text-gray-400 mr-2">⚙️</span> Configurações
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-700">
+                        Número de Frames na Memória
+                    </label>
+                    <input type="number" id="numFrames" min="2" max="8" value="4" 
+                           class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                 </div>
-                
-                <div class="form-group">
-                    <label for="numFrames">Número de Frames:</label>
-                    <input type="number" id="numFrames" value="3" min="1" max="10">
-                </div>
-                
-                <div class="form-group">
-                    <label for="algorithm">Algoritmo:</label>
-                    <select id="algorithm">
-                        <option value="fifo">FIFO</option>
-                        <option value="optimal">Optimal</option>
-                        <option value="clock">Clock</option>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-700">
+                        Algoritmo de Substituição
+                    </label>
+                    <select id="algorithm" 
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <option value="fifo">FIFO (First In, First Out)</option>
+                        <option value="optimal">Optimal (Teórico)</option>
+                        <option value="clock">Clock (Second-Chance)</option>
+                        <option value="lru">LRU (Least Recently Used)</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="allocation">Alocação:</label>
-                    <select id="allocation">
-                        <option value="global">Global</option>
-                        <option value="local">Local</option>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-700">
+                        Modo de Alocação
+                    </label>
+                    <select id="allocationMode" 
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <option value="global">Global (Pool único)</option>
+                        <option value="local">Local (Frames fixos por processo)</option>
                     </select>
                 </div>
             </div>
 
-            <div class="button-group">
-                <button id="startBtn" class="btn">🚀 Iniciar</button>
-                <button id="pauseBtn" class="btn btn-secondary" disabled>⏸️ Pausar</button>
-                <button id="stepBtn" class="btn btn-secondary" disabled>⏭️ Passo</button>
-                <button id="resetBtn" class="btn btn-secondary">🔄 Reset</button>
+            <div class="mt-4">
+                <label class="block text-sm font-medium mb-2 text-gray-700">
+                    Sequência de Acessos (formato: processo:página ou apenas página)
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" id="pageSequence" value="1:1,1:2,2:3,2:4,1:1,2:3,1:5,1:2,2:4,1:3" 
+                           placeholder="Ex: 1:1,1:2,2:3 ou 1,2,3,4,5"
+                           class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    <button onclick="generateRandomSequence()" 
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition font-medium">
+                        Aleatória
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                    Modo Global: use apenas números (1,2,3). Modo Local: use processo:página (1:2,2:3) ou deixe que o sistema atribua processos automaticamente.
+                </p>
+            </div>
+            
+            <div id="processConfig" class="mt-4 hidden">
+                <label class="block text-sm font-medium mb-2 text-gray-700">
+                    Configuração de Processos (Modo Local)
+                </label>
+                <div class="bg-gray-50 rounded-md p-3 border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="text-xs text-gray-600">Número de Processos</label>
+                            <input type="number" id="numProcesses" min="1" max="4" value="2" 
+                                   class="w-full px-2 py-1 bg-white border border-gray-300 rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-600">Distribuição de Frames</label>
+                            <select id="frameDistribution" class="w-full px-2 py-1 bg-white border border-gray-300 rounded text-sm">
+                                <option value="equal">Igual</option>
+                                <option value="proportional">Proporcional ao uso</option>
+                                <option value="custom">Personalizada</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="customFrameAllocation" class="hidden">
+                        <p class="text-xs text-gray-600 mb-2">Frames por processo (total disponível: <span id="totalFramesAvailable">4</span>)</p>
+                        <div id="processFrameInputs" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        </div>
+                    </div>
+                    <div id="processAllocationPreview" class="mt-3 p-2 bg-white rounded border border-gray-200">
+                    </div>
+                </div>
             </div>
 
-            <div class="speed-control">
-                <label>Velocidade:</label>
-                <input type="range" id="speedSlider" class="speed-slider" min="100" max="2000" value="800">
-                <span id="speedValue">800ms</span>
+            <div class="flex gap-3 mt-6">
+                <button onclick="startSimulation()" 
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition font-medium shadow-sm">
+                    Iniciar Simulação
+                </button>
+                <button onclick="stepSimulation()" id="stepBtn" disabled
+                        class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    Próximo Passo
+                </button>
+                <button onclick="autoPlay()" id="autoPlayBtn" disabled
+                        class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                   Auto Play
+                </button>
+                <button onclick="resetSimulation()" 
+                        class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition font-medium">
+                    Resetar
+                </button>
             </div>
         </section>
 
-        <section class="stats">
-            <div class="stat-card">
-                <div class="stat-number" id="totalAccesses">0</div>
-                <div class="stat-label">Total de Acessos</div>
+        <!-- Visualização da Memória -->
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <span class="text-gray-400 mr-2"></span> Estado da Memória Física
+            </h2>
+            
+            <div id="memoryFrames" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="pageFaults">0</div>
-                <div class="stat-label">Page Faults</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="pageHits">0</div>
-                <div class="stat-label">Page Hits</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="faultRate">0%</div>
-                <div class="stat-label">Taxa de Falhas</div>
+
+            <div id="clockInfo" class="mt-4 hidden">
+                <h3 class="text-lg font-medium text-gray-700 mb-2">⏰ Bits de Referência (Clock)</h3>
+                <div id="referenceBits" class="flex gap-2"></div>
             </div>
         </section>
 
-        <div class="main-content">
-            <section class="section">
-                <h3>💾 Estado da Memória</h3>
-                <div>Página atual: <span class="current-page" id="currentPageDisplay">-</span></div>
-                <div class="memory-view" id="memoryView"></div>
-                <div id="memoryInfo"></div>
-            </section>
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <span class="text-gray-400 mr-2"></span> Processo de Execução
+            </h2>
+            
+            <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-sm text-gray-600">Sequência de Acessos:</span>
+                </div>
+                <div id="accessSequence" class="flex flex-wrap gap-2">
+                </div>
+            </div>
 
-            <section class="section">
-                <h3>📋 Log da Simulação</h3>
-                <div class="simulation-log" id="simulationLog">Pronto para iniciar simulação...</div>
-            </section>
-        </div>
+            <div id="currentStep" class="p-4 bg-gray-50 rounded-md border border-gray-200">
+                <p class="text-gray-500">Aguardando início da simulação...</p>
+            </div>
+        </section>
 
-        <section class="page-table-section">
-            <h3>📑 Tabela de Páginas</h3>
-            <div class="page-table" id="pageTable">
-                <div class="page-table-header">Página</div>
-                <div class="page-table-header">Presente</div>
-                <div class="page-table-header">Frame</div>
+        <!-- Estatísticas -->
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <span class="text-gray-400 mr-2"></span> Estatísticas
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 rounded-md border border-gray-200 p-4">
+                    <p class="text-sm text-gray-600 mb-1">Total de Acessos</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalAccesses">0</p>
+                </div>
+                <div class="bg-red-50 rounded-md border border-red-200 p-4">
+                    <p class="text-sm text-gray-600 mb-1">Page Faults</p>
+                    <p class="text-2xl font-bold text-red-600" id="pageFaults">0</p>
+                </div>
+                <div class="bg-green-50 rounded-md border border-green-200 p-4">
+                    <p class="text-sm text-gray-600 mb-1">Page Hits</p>
+                    <p class="text-2xl font-bold text-green-600" id="pageHits">0</p>
+                </div>
+                <div class="bg-yellow-50 rounded-md border border-yellow-200 p-4">
+                    <p class="text-sm text-gray-600 mb-1">Taxa de Falhas</p>
+                    <p class="text-2xl font-bold text-yellow-600" id="faultRate">0%</p>
+                </div>
+            </div>
+
+            <!-- Comparação de Algoritmos -->
+            <div id="algorithmComparison" class="mt-6 hidden">
+                <h3 class="text-lg font-medium text-gray-700 mb-3">Comparação de Algoritmos</h3>
+                <div id="comparisonChart" class="bg-gray-50 rounded-md border border-gray-200 p-4">
+                    <!-- Gráfico de comparação será inserido aqui -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Log de Eventos -->
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <span class="text-gray-400 mr-2"></span> Log de Eventos
+            </h2>
+            <div id="eventLog" class="h-48 overflow-y-auto bg-gray-900 rounded-md p-4 font-mono text-sm">
+                <!-- Eventos serão logados aqui -->
             </div>
         </section>
     </div>
 
-    <script src="script.js"></script>
+    <script src="js/simulator.js"></script>
+    <script src="js/algorithms.js"></script>
+    <script src="js/ui.js"></script>
 </body>
 </html>
