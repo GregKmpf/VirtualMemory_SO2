@@ -24,18 +24,18 @@ Simulador educacional interativo de **Memória Virtual com Paginação por Deman
 
 1. **Clone o repositório ou baixe os arquivos:**
 ```bash
-git clone https://github.com/seu-usuario/simulador-memoria-virtual.git
-cd simulador-memoria-virtual
+git clone https://github.com/GregKmpf/VirtualMemory_SO2 simMV
+cd simMV
 ```
 
 2. **Estrutura de arquivos necessária:**
 ```
 projeto/
-├── index.html          # Arquivo principal
+├── index.html        
 ├── js/
-│   ├── simulator.js    # Lógica principal do simulador
-│   ├── algorithms.js   # Implementação dos algoritmos
-│   └── ui.js          # Funções de interface
+│   ├── simulator.js    
+│   ├── algorithms.js   
+│   └── ui.js         
 └── README.md
 ```
 
@@ -68,8 +68,8 @@ projeto/
 
 1. **Selecione o número de frames** (2-8 frames recomendados)
 2. **Escolha o algoritmo de substituição**
-3. **Defina o modo de alocação** (Global ou Local)
-4. **Configure a sequência de páginas**
+3. **Defina o modo de alocação** (Padrão: Global)
+4. **Digite a sequência de páginas ou gere-as aleatoriamente**
 
 ### Modos de Operação
 
